@@ -11,4 +11,9 @@
 | BLE-Batterie | `status_ble_bat` = Prozent? (Kris hatte mV) | Build 1, nur mit BLE-Sensor | offen |
 | Darstellung in der App | Variablen in der Symcon-App (iOS/Android) ansehen, nicht nur im Browser | Build 1 | offen |
 | Darstellung ersetzt altes Profil | Nach Übernahme einer Kris-Instanz: Variable zeigt Darstellung, nicht mehr FAIKIN_-Profil | bei Store-Übergabe | offen |
-| Befehls-Topics | MQTT-Mitschnitt beim Schalten (Weboberfläche und Kris' Modul) | vor Build 2 | offen |
+| Befehls-Topics | Kris' Modul: Ein/Aus, Eco, Swing kommen an (Detlev 22.11.); Firmware-Quelltext bestätigt Format | vor Build 2 | ok |
+| Steuern mit Freigabe | Haken setzen → Ein/Aus, Betriebsart, Soll, Lüfter, Lamellen in der Visu schalten; Variable folgt nach 1–2 s | Build 2 | offen |
+| Ablehnung | Funktion schalten, die das Gerät nicht hat → Meldung im Formular/Meldungsfenster | Build 2 | offen |
+| Aktuelle Leistung | `status_consumption` = W aus der Weboberfläche | Build 2 | offen |
+| Schieberegler/Aufzählung in der App | Solltemperatur, Betriebsart, Lüfter in der Symcon-App ansehen | Build 2 | offen |
+| Übernahme Kris-Instanz | nach Store-Übergabe: Steuern geht weiter, Hinweis + Knopf „Freigabe zurücknehmen“ | bei Store-Übergabe | offen |

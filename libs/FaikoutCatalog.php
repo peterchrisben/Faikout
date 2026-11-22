@@ -38,7 +38,7 @@ final class FaikoutCatalog
         'status_sensor'     => [self::GROUP_OPERATION, 'Intelligent eye sensor', VARIABLETYPE_BOOLEAN, 'onoff', 20, true],
         'status_streamer'   => [self::GROUP_OPERATION, 'Streamer', VARIABLETYPE_BOOLEAN, 'onoff', 21, true],
         'status_led'        => [self::GROUP_OPERATION, 'LED on the indoor unit', VARIABLETYPE_BOOLEAN, 'onoff', 22, true],
-        'status_demand'     => [self::GROUP_OPERATION, 'Demand limit', VARIABLETYPE_INTEGER, 'percent', 23, false],
+        'status_demand'     => [self::GROUP_OPERATION, 'Demand limit', VARIABLETYPE_INTEGER, 'percent', 23, true],
         'status_heat'       => [self::GROUP_OPERATION, 'Heating', VARIABLETYPE_BOOLEAN, 'yesno', 24, true],
         'status_online'     => [self::GROUP_OPERATION, 'Air conditioner reachable', VARIABLETYPE_BOOLEAN, 'yesno', 25, true],
         'status_control'    => [self::GROUP_OPERATION, 'External control active', VARIABLETYPE_BOOLEAN, 'yesno', 26, false],
@@ -53,6 +53,7 @@ final class FaikoutCatalog
         'status_fanrpm'     => [self::GROUP_MEASURE, 'Fan speed (rpm)', VARIABLETYPE_INTEGER, 'rpm', 35, true],
         'status_comp'       => [self::GROUP_MEASURE, 'Compressor frequency', VARIABLETYPE_INTEGER, 'hertz', 36, true],
 
+        'status_consumption' => [self::GROUP_ENERGY, 'Current power', VARIABLETYPE_INTEGER, 'watt', 39, true],
         'status_Wh'         => [self::GROUP_ENERGY, 'Energy total', VARIABLETYPE_FLOAT, 'kwh', 40, true],
         'status_Whheating'  => [self::GROUP_ENERGY, 'Energy heating', VARIABLETYPE_FLOAT, 'kwh', 41, true],
         'status_Whcooling'  => [self::GROUP_ENERGY, 'Energy cooling', VARIABLETYPE_FLOAT, 'kwh', 42, true],
@@ -111,6 +112,7 @@ final class FaikoutCatalog
         'hum'         => 'status_hum',
         'fanrpm'      => 'status_fanrpm',
         'comp'        => 'status_comp',
+        'consumption' => 'status_consumption',
         'Whoutside'   => 'status_Wh',
         'Wh'          => 'status_Wh', // older firmware
         'Whheating'   => 'status_Whheating',
@@ -123,6 +125,32 @@ final class FaikoutCatalog
         'auto0'       => 'status_autooff',
         'env'         => 'status_env',
         'autob'       => 'status_autob'
+    ];
+
+    /**
+     * Values that can be controlled: ident => [field in command/<host>, kind, min, max, step].
+     * Kinds: bool (JSON true/false), mode/fan (one letter), number (JSON number within min…max, rounded to step).
+     * Ranges from the firmware: temp 16…32 °C in 0.5 (S21), demand 30…100 % in 5 (web interface).
+     */
+    public const CONTROLS = [
+        'status_power'    => ['power', 'bool'],
+        'status_mode'     => ['mode', 'mode'],
+        'status_temp'     => ['temp', 'number', 16, 32, 0.5],
+        'status_fan'      => ['fan', 'fan'],
+        'status_swingv'   => ['swingv', 'bool'],
+        'status_swingh'   => ['swingh', 'bool'],
+        'status_econo'    => ['econo', 'bool'],
+        'status_powerful' => ['powerful', 'bool'],
+        'status_comfort'  => ['comfort', 'bool'],
+        'status_quiet'    => ['quiet', 'bool'],
+        'status_sensor'   => ['sensor', 'bool'],
+        'status_streamer' => ['streamer', 'bool'],
+        'status_led'      => ['led', 'bool'],
+        'status_demand'   => ['demand', 'number', 30, 100, 5],
+        'status_autoe'    => ['autoe', 'bool'],
+        'status_autop'    => ['autop', 'bool'],
+        'status_autot'    => ['autot', 'number', 16, 32, 0.5],
+        'status_autor'    => ['autor', 'number', 0, 5, 0.5]
     ];
 
     /** Fields of the BLE object ("ble": {...}) in state/<host>/status => ident */
@@ -141,7 +169,6 @@ final class FaikoutCatalog
     public const DEVICE_FIELDS = [
         'online'  => 'status_online',
         'ipv4'    => 'state_ipv4',
-        'version' => 'state_version',
         'ssid'    => 'state_ssid',
         'rssi'    => 'state_rssi'
     ];

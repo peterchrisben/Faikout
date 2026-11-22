@@ -8,7 +8,6 @@
             "BLE sensor": "BLE-Sensor",
             "Device": "Gerät",
             "Errors": "Fehler",
-
             "Power": "Eingeschaltet",
             "Mode": "Betriebsart",
             "Target temperature": "Solltemperatur",
@@ -57,7 +56,6 @@
             "WiFi signal": "WLAN-Signal",
             "Last error": "Letzte Fehlermeldung",
             "Last rejected change": "Zuletzt abgelehnte Änderung",
-
             "Off": "Aus",
             "On": "An",
             "No": "Nein",
@@ -73,8 +71,6 @@
             "Level 3": "Stufe 3",
             "Level 4": "Stufe 4",
             "Level 5": "Stufe 5",
-
-            "Controlling the air conditioner is not available yet in this build.": "Das Steuern des Klimageräts ist in diesem Build noch nicht möglich.",
             "not reported yet": "noch nicht gemeldet",
             "archived – stays": "archiviert – bleibt erhalten",
             "Enter the hostname of the Faikout to start.": "Zum Start den Hostnamen des Faikout eintragen.",
@@ -85,7 +81,6 @@
             "report every %d s": "Meldung alle %d s",
             "live status on": "Live-Status an",
             "live status off": "Live-Status aus",
-
             "Hostname of the Faikout (as set in its web interface)": "Hostname des Faikout (wie in seiner Weboberfläche eingestellt)",
             "The Faikout sends its data to the MQTT server of Symcon. In its web interface, enter the IP address of Symcon as MQTT server (port 1883 unless changed) and the user and password of the MQTT server instance.": "Der Faikout schickt seine Daten an den MQTT-Server von Symcon. In seiner Weboberfläche als MQTT-Server die IP-Adresse von Symcon eintragen (Port 1883, falls nicht geändert) sowie Benutzer und Passwort der MQTT-Server-Instanz.",
             "Select values": "Werte auswählen",
@@ -100,10 +95,24 @@
             "Tick all": "Alle anhaken",
             "Untick all": "Alle Haken entfernen",
             "Request status now": "Status jetzt anfordern",
-            "This build only reads values. Controlling the air conditioner follows in the next build.": "Dieser Build liest nur Werte. Das Steuern des Klimageräts folgt im nächsten Build.",
             "Please enter the hostname of the Faikout": "Bitte den Hostnamen des Faikout eintragen",
             "No message from the Faikout for 5 minutes": "Seit 5 Minuten keine Nachricht vom Faikout",
-            "MQTT server not active": "MQTT-Server nicht aktiv"
+            "MQTT server not active": "MQTT-Server nicht aktiv",
+            "Current power": "Aktuelle Leistung",
+            "Allow control (switch the air conditioner and change values from Symcon)": "Steuerung freigeben (Klimagerät aus Symcon schalten und Werte ändern)",
+            "Taken over from \"Faikin 4 Daikin\": control stays allowed, so existing schedules and scripts keep working.": "Von „Faikin 4 Daikin“ übernommen: Die Steuerung bleibt freigegeben, damit bestehende Ablaufpläne und Skripte weiterlaufen.",
+            "Withdraw this approval": "Freigabe zurücknehmen",
+            "Control will then only be possible with the tick above. Continue?": "Steuern geht danach nur noch mit dem Haken oben. Fortfahren?",
+            "Taken over from \"Faikin 4 Daikin\": control stays allowed.": "Von „Faikin 4 Daikin“ übernommen: Steuerung bleibt freigegeben.",
+            "Control is not allowed. Tick \"Allow control\" in the instance.": "Steuern ist nicht freigegeben. In der Instanz „Steuerung freigeben“ anhaken.",
+            "The Faikout cannot be reached: hostname missing or MQTT server not active.": "Der Faikout ist nicht erreichbar: Hostname fehlt oder MQTT-Server nicht aktiv.",
+            "Sent: %s → %s": "Gesendet: %s → %s",
+            "Accepted: %s → %s": "Übernommen: %s → %s",
+            "Invalid value for %s: %s": "Ungültiger Wert für %s: %s",
+            "%s must be between %s and %s.": "%s muss zwischen %s und %s liegen.",
+            "%s: the air conditioner did not take %s, it reports %s.": "%s: Das Klimagerät hat %s nicht übernommen, es meldet %s.",
+            "the air conditioner refused the change": "das Klimagerät hat die Änderung abgelehnt",
+            "%s: not accepted – %s": "%s: nicht übernommen – %s"
         }
     }
 }

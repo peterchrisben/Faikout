@@ -2,7 +2,7 @@
 """Checks locale.json: every English text of the module has a German translation (and nothing else).
 
 Texts are collected from:
-- module.php: ->Translate('…'), BoolPresentation('…', '…'), TextIntervals([… => '…'])
+- module.php: ->Translate('…'), BoolPresentation('…', '…'), MODE_TEXTS / FAN_TEXTS
 - libs/FaikoutCatalog.php: group constants and value names
 - form.json: caption / confirm / label
 Call: python3 tests/check_locale.py
@@ -29,7 +29,7 @@ texts = set()
 texts.update(unescape(m) for m in re.findall(r"->Translate\(" + STR + r"\)", php))
 for m in re.finditer(r"BoolPresentation\(" + STR + r",\s*" + STR + r"\)", php):
     texts.update(unescape(x) for x in m.groups())
-for block in re.findall(r"TextIntervals\(\[(.*?)\]\)", php, re.S):
+for block in re.findall(r"const (?:MODE|FAN)_TEXTS\s*=\s*\[(.*?)\];", php, re.S):
     texts.update(unescape(x) for x in re.findall(r"=>\s*" + STR, block))
 texts.update(unescape(m) for m in re.findall(r"const GROUP_\w+\s*=\s*" + STR, catalog))
 texts.update(unescape(m) for m in re.findall(r"=> \[self::GROUP_\w+,\s*" + STR, catalog))

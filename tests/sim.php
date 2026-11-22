@@ -48,6 +48,30 @@ function receive(int $inst, string $topic, $payload): void
     ]);
     Stub::$instances[$inst]->ReceiveData($json);
 }
+function findItem(array $items, string $name): ?array
+{
+    foreach ($items as $item) {
+        if (($item['name'] ?? '') === $name) {
+            return $item;
+        }
+        if (isset($item['items']) && ($found = findItem($item['items'], $name)) !== null) {
+            return $found;
+        }
+    }
+    return null;
+}
+function sentFull(int $inst): array
+{
+    $ref = new ReflectionProperty(IPSModule::class, 'sentToParent');
+    $list = $ref->getValue(Stub::$instances[$inst]);
+    $ref->setValue(Stub::$instances[$inst], []);
+    return array_map(fn($j) => [json_decode($j, true)['Topic'], json_decode($j, true)['Payload']], $list);
+}
+/** Sent commands as [topic, decoded payload] – independent of how json_encode writes 22.0 */
+function commands(int $inst): array
+{
+    return array_map(fn($c) => [$c[0], json_decode($c[1], true)], sentFull($inst));
+}
 function sent(int $inst): array
 {
     $ref = new ReflectionProperty(IPSModule::class, 'sentToParent');
@@ -123,7 +147,7 @@ check('Einschaltzeit', val($id, 'status_autoon') === '07:30');
 check('BLE Temperatur', val($id, 'status_ble_temp') === 21.12);
 check('BLE Batterie', val($id, 'status_ble_bat') === 87);
 check('BLE Spannung standardmäßig nicht angelegt', vid($id, 'status_ble_volt') === 0);
-check('Leistungsbegrenzung standardmäßig nicht angelegt', vid($id, 'status_demand') === 0);
+check('Leistungsbegrenzung standardmäßig angelegt', val($id, 'status_demand') === 100);
 check('nicht gemeldetes Feld nicht angelegt (Ansaugtemperatur)', vid($id, 'status_inlet') === 0);
 check('Variablen ohne Aktion', Stub::$objects[vid($id, 'status_power')]['action'] === 0);
 check('Name deutsch', Stub::$objects[vid($id, 'status_temp')]['name'] === 'Solltemperatur');
@@ -196,14 +220,14 @@ Stub::$archived[$outside] = true;
 IPS_SetProperty($id, 'ValueSelection', json_encode([
     ['Show' => false, 'Ident' => 'status_home'],
     ['Show' => false, 'Ident' => 'status_outside'],
-    ['Show' => true, 'Ident' => 'status_demand'],
+    ['Show' => true, 'Ident' => 'status_ble_volt'],
     ['Show' => true, 'Ident' => 'gibtsnicht']
 ]));
 IPS_ApplyChanges($id);
 sent($id);
 check('abgewählt → gelöscht', vid($id, 'status_home') === 0);
 check('abgewählt, aber archiviert → bleibt', vid($id, 'status_outside') === $outside);
-check('angehakt und schon gemeldet → angelegt', vid($id, 'status_demand') > 0);
+check('angehakt und schon gemeldet → angelegt', vid($id, 'status_ble_volt') > 0);
 receive($id, 'state/GuestAC/status', ['home' => 23.0, 'outside' => 3.0, 'demand' => 80]);
 check('abgewählt → kommt nicht wieder', vid($id, 'status_home') === 0);
 check('archiviert → wird weiter aktualisiert', val($id, 'status_outside') === 3.0);
@@ -219,13 +243,14 @@ $form = json_decode(Stub::$instances[$id]->GetConfigurationForm(), true);
 check('Formular ist JSON', is_array($form));
 $last = end($form['actions']);
 check('Versionszeile zuletzt', ($last['type'] ?? '') === 'Label' && str_starts_with($last['caption'], 'Faikout 1.0 (Build '));
-$list = $form['elements'][3]['items'][1];
+$list = findItem($form['elements'], 'ValueSelection');
 check('Werteliste vollständig', count($list['values']) === count(FaikoutCatalog::VALUES));
 $row = array_values(array_filter($list['values'], fn($r) => $r['Ident'] === 'status_outside'))[0];
 check('Archiv-Hinweis in der Liste', $row['Archive'] === 'archiviert – bleibt erhalten' && $row['Show'] === false);
 $row = array_values(array_filter($list['values'], fn($r) => $r['Ident'] === 'status_inlet'))[0];
 check('nie gemeldet → Hinweis', $row['Value'] === 'noch nicht gemeldet');
 check('Überblick mit letzter Nachricht', str_starts_with($form['elements'][0]['caption'], 'Letzte Nachricht: '));
+check('Freigabe-Hinweis ohne Übernahme unsichtbar', findItem($form['elements'], 'LegacyInfo')['visible'] === false);
 
 // ---------------------------------------------------------------- 11 refresh and watchdog
 setAttr($id, 'LastStatus', time() - 120);
@@ -248,13 +273,106 @@ Stub::FireTimer($id, 'Refresh');
 check('MQTT-Server wieder da → 102', Stub::$objects[$id]['status'] === 102);
 sent($id);
 
-// ---------------------------------------------------------------- 12 control not yet
+// ---------------------------------------------------------------- 12 control
+check('ohne Freigabe keine Aktion', Stub::$objects[vid($id, 'status_power')]['action'] === 0);
 try {
     IPS_RequestAction($id, 'status_power', false);
-    check('Steuern wirft Fehler', false);
+    check('ohne Freigabe: Fehler', false);
 } catch (Exception $e) {
-    check('Steuern wirft verständlichen Fehler', str_contains($e->getMessage(), 'noch nicht möglich'), $e->getMessage());
+    check('ohne Freigabe: verständlicher Fehler', str_contains($e->getMessage(), 'nicht freigegeben'), $e->getMessage());
 }
+check('ohne Freigabe nichts gesendet', sent($id) === []);
+
+IPS_SetProperty($id, 'Hostname', 'GuestAC');
+IPS_SetProperty($id, 'AllowControl', true);
+IPS_ApplyChanges($id);
+sent($id);
+check('mit Freigabe: Aktion', Stub::$objects[vid($id, 'status_power')]['action'] === $id);
+check('mit Freigabe: Schalter', Stub::$objects[vid($id, 'status_power')]['profile']['PRESENTATION'] === VARIABLE_PRESENTATION_SWITCH);
+$p = Stub::$objects[vid($id, 'status_temp')]['profile'];
+check('Solltemperatur als Schieberegler 16–32', $p['PRESENTATION'] === VARIABLE_PRESENTATION_SLIDER && $p['MIN'] === 16 && $p['MAX'] === 32 && $p['STEP_SIZE'] === 0.5);
+$p = Stub::$objects[vid($id, 'status_mode')]['profile'];
+check('Betriebsart als Aufzählung', $p['PRESENTATION'] === VARIABLE_PRESENTATION_ENUMERATION && json_decode($p['OPTIONS'], true)[1]['Caption'] === 'Kühlen');
+check('Messwerte ohne Aktion', Stub::$objects[vid($id, 'status_outside')]['action'] === 0);
+
+// switch off: sent typed, variable not set in advance
+RequestAction(vid($id, 'status_power'), false);
+check('Ausschalten gesendet', sentFull($id) === [['command/GuestAC', '{"power":false}']]);
+check('Variable nicht vorab gesetzt', val($id, 'status_power') === true);
+$timers = (new ReflectionProperty(IPSModule::class, 'timers'))->getValue(Stub::$instances[$id]);
+check('Prüf-Timer läuft', $timers['Verify']['interval'] === 5000);
+receive($id, 'state/GuestAC/status', ['power' => false]);
+check('Rückmeldung übernommen', val($id, 'status_power') === false);
+check('Ergebnis angezeigt', str_contains(attr($id, 'LastControl'), 'Übernommen: Eingeschaltet → Aus'), attr($id, 'LastControl'));
+check('nichts mehr offen', json_decode(attr($id, 'Pending'), true) === []);
+
+// mode and fan as letters, temperature rounded to 0.5
+receive($id, 'state/GuestAC/status', ['autoe' => false]);
+RequestAction(vid($id, 'status_mode'), 2);
+RequestAction(vid($id, 'status_fan'), -1);
+RequestAction(vid($id, 'status_temp'), 22.3);
+RequestAction(vid($id, 'status_demand'), 72);
+check('Befehle typgenau', commands($id) === [
+    ['command/GuestAC', ['mode' => 'C']],
+    ['command/GuestAC', ['fan' => 'Q']],
+    ['command/GuestAC', ['temp' => 22.5]],
+    ['command/GuestAC', ['demand' => 70]]
+]);
+foreach ([[15, 'status_temp'], [33, 'status_temp'], [9, 'status_mode'], ['x', 'status_demand']] as [$bad, $ident]) {
+    try {
+        RequestAction(vid($id, $ident), $bad);
+        check("ungültiger Wert $bad abgelehnt", false);
+    } catch (Exception $e) {
+        check("ungültiger Wert $bad abgelehnt", sent($id) === [], $e->getMessage());
+    }
+}
+receive($id, 'state/GuestAC/status', ['mode' => 'C', 'fan' => 'Q', 'temp' => 22.5, 'demand' => 70]);
+check('alles übernommen', json_decode(attr($id, 'Pending'), true) === [] && val($id, 'status_temp') === 22.5);
+
+// refused by the firmware
+RequestAction(vid($id, 'status_econo'), true);
+sent($id);
+receive($id, 'error/GuestAC/control', ['field' => 'econo', 'error' => 'Setting cannot be controlled']);
+check('Ablehnung gemeldet', str_contains(attr($id, 'LastControl'), 'Eco-Modus: nicht übernommen – Setting cannot be controlled'), attr($id, 'LastControl'));
+check('Ablehnung im Log', count(array_filter(Stub::$log, fn($l) => str_starts_with($l, '[LOG') && str_contains($l, 'Eco-Modus: nicht übernommen'))) === 1);
+
+// no answer: ask once, then report
+RequestAction(vid($id, 'status_quiet'), true);
+sent($id);
+$pending = json_decode(attr($id, 'Pending'), true);
+$pending['status_quiet']['at'] = time() - 6;
+setAttr($id, 'Pending', json_encode($pending));
+setAttr($id, 'LastStatus', time() - 100);
+Stub::FireTimer($id, 'Verify');
+check('keine Antwort → Status angefragt', sent($id) === ['command/GuestAC/status']);
+Stub::FireTimer($id, 'Verify');
+check('nur einmal angefragt', sent($id) === []);
+$pending = json_decode(attr($id, 'Pending'), true);
+$pending['status_quiet']['at'] = time() - 25;
+setAttr($id, 'Pending', json_encode($pending));
+Stub::FireTimer($id, 'Verify');
+check('nach 20 s: nicht übernommen', str_contains(attr($id, 'LastControl'), 'Leises Außengerät: Das Klimagerät hat An nicht übernommen, es meldet Aus.'), attr($id, 'LastControl'));
+check('danach nichts offen', json_decode(attr($id, 'Pending'), true) === []);
+
+// Faikout auto active: target moves autot along
+receive($id, 'state/GuestAC/status', ['autoe' => true, 'autor' => 1.0]);
+RequestAction(vid($id, 'status_temp'), 21);
+$c = commands($id);
+check('Automatik aktiv: autot mit', count($c) === 1 && $c[0][0] === 'command/GuestAC' && $c[0][1] == ['temp' => 21, 'autot' => 21], json_encode($c));
+
+// version with build date
+receive($id, 'state/GuestAC', ['id' => '30AEA4CAFE01', 'version' => '5298aa2d', 'build' => '2026-11-19T12:23:17', 'consumption' => 760]);
+check('Firmware mit Datum', val($id, 'state_version') === '5298aa2d (19.11.2026)');
+check('HA-consumption in state/<host> nicht ausgewertet', vid($id, 'status_consumption') === 0);
+receive($id, 'state/GuestAC/status', ['consumption' => 760]);
+check('aktuelle Leistung', val($id, 'status_consumption') === 760);
+
+// switching the approval off removes the actions
+IPS_SetProperty($id, 'AllowControl', false);
+IPS_ApplyChanges($id);
+sent($id);
+check('Freigabe weg → keine Aktion', Stub::$objects[vid($id, 'status_power')]['action'] === 0
+    && Stub::$objects[vid($id, 'status_mode')]['profile']['INTERVALS_ACTIVE'] === true);
 
 // ---------------------------------------------------------------- 13 migration from Kris' module
 $old = Stub::CreateInstance($class);
@@ -271,11 +389,21 @@ $ipId = $mk($old, 'status_ipv4', 3, '1.2.3.4', '', false);
 $arcId = $mk($old, 'status_auto1', 1, 1700000000, '~UnixTimestampTime', true);
 Stub::$archived[$arcId] = true;
 setAttr($old, 'state_id', '30aea4beef02'); // Kris stored it as received
+setAttr($old, 'LegacyChecked', false);     // new attribute after the module update
 IPS_SetProperty($old, 'Hostname', 'LivingAC');
 IPS_ApplyChanges($old);
 sent($old);
 check('alte Variable bleibt (gleiche ID)', vid($old, 'status_mode') === $modeId && Stub::$objects[$modeId]['value'] === 2);
-check('alte Variable: Aktion weg (Build 1 nur lesen)', Stub::$objects[$modeId]['action'] === 0);
+check('übernommen: Freigabe erkannt', attr($old, 'LegacyControl') === true);
+check('übernommen: Aktion bleibt', Stub::$objects[$modeId]['action'] === $old);
+$form = json_decode(Stub::$instances[$old]->GetConfigurationForm(), true);
+check('übernommen: Hinweis + Knopf sichtbar', findItem($form['elements'], 'LegacyInfo')['visible'] === true && findItem($form['elements'], 'RevokeLegacy')['visible'] === true);
+RequestAction($modeId, 1);
+check('übernommen: Steuern geht ohne Haken', sent($old) === ['command/LivingAC']);
+IPS_RequestAction($old, 'RevokeLegacy', '');
+check('Freigabe zurückgenommen → Aktion weg', Stub::$objects[$modeId]['action'] === 0 && attr($old, 'LegacyControl') === false);
+IPS_ApplyChanges($old);
+check('bleibt zurückgenommen (nur einmal erkannt)', attr($old, 'LegacyControl') === false);
 check('alte Variable: Darstellung statt Profil', is_array(Stub::$objects[$modeId]['profile']));
 check('ersetzte Variable gelöscht', vid($old, 'status_auto0') === 0 && vid($old, 'status_ipv4') === 0);
 check('ersetzte, aber archivierte Variable bleibt', vid($old, 'status_auto1') === $arcId);

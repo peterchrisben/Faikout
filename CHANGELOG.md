@@ -2,6 +2,20 @@
 
 ## Version 1.0
 
+### Build 2 (22.11.2026)
+
+#### Neu
+- Steuern: Ein/Aus, Betriebsart, Solltemperatur, Lüfterstufe, Lamellen, Eco, Powerful, Komfort, Leise, Präsenzsensor, Streamer, LED, Leistungsbegrenzung sowie Faikout-Automatik (freigeben, automatisch ein/aus, Soll, Bereich). Befehl über `command/<host>` mit JSON, so wie die Firmware ihn erwartet (true/false, Zahl, ein Buchstabe für Betriebsart und Lüfter).
+- Häkchen „Steuerung freigeben“ (Standard aus). Ohne Freigabe sind alle Werte nur Anzeige.
+- Instanzen, die von „Faikin 4 Daikin“ übernommen werden, bleiben schaltbar (einmalige Erkennung an vorhandenen Variablen mit Aktion), mit Knopf „Freigabe zurücknehmen“.
+- Der Wert wird nicht vorab gesetzt, sondern aus der Rückmeldung des Geräts übernommen. Kommt keine Rückmeldung, fragt das Modul nach 5 s nach; nach 20 s oder bei einer Ablehnung (`error/<host>/control`, `failed-set`) steht eine Meldung im Formular und im Meldungsfenster.
+- Bei aktiver Faikout-Automatik wird mit der Solltemperatur auch die Automatik-Solltemperatur gesetzt (wie bei Home Assistant).
+- Aktuelle Leistung in W (`status_consumption`).
+- Firmware-Version mit Build-Datum, z. B. „5298aa2d (19.11.2026)“.
+
+#### Geändert
+- Leistungsbegrenzung ist standardmäßig angehakt.
+
 ### Build 1 (22.11.2026)
 
 #### Neu

@@ -16,6 +16,25 @@
             "caption": "The Faikout sends its data to the MQTT server of Symcon. In its web interface, enter the IP address of Symcon as MQTT server (port 1883 unless changed) and the user and password of the MQTT server instance."
         },
         {
+            "type": "CheckBox",
+            "name": "AllowControl",
+            "caption": "Allow control (switch the air conditioner and change values from Symcon)"
+        },
+        {
+            "type": "Label",
+            "name": "LegacyInfo",
+            "caption": "Taken over from \"Faikin 4 Daikin\": control stays allowed, so existing schedules and scripts keep working.",
+            "visible": false
+        },
+        {
+            "type": "Button",
+            "name": "RevokeLegacy",
+            "caption": "Withdraw this approval",
+            "visible": false,
+            "confirm": "Control will then only be possible with the tick above. Continue?",
+            "onClick": "IPS_RequestAction($id, 'RevokeLegacy', '');"
+        },
+        {
             "type": "ExpansionPanel",
             "caption": "Select values",
             "items": [
@@ -100,7 +119,8 @@
         },
         {
             "type": "Label",
-            "caption": "This build only reads values. Controlling the air conditioner follows in the next build."
+            "name": "ControlResult",
+            "caption": ""
         }
     ],
     "status": [
