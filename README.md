@@ -1,0 +1,96 @@
+# Faikout 4 Daikin
+
+Symcon-Modul für Daikin-Klimageräte mit einem **Faikout**-Modul (früher **Faikin**). Der Faikout ist eine kleine ESP32-Platine, die an die Service-Schnittstelle des Innengeräts (S21 bzw. X50) gesteckt wird und das Klimagerät lokal über MQTT bereitstellt – ohne Daikin-Cloud.
+
+**Aktuelle Version:** 1.0 (Build 1) – Testversion, **liest nur**. Das Steuern folgt im nächsten Build.
+
+Nachfolger von [„Faikin 4 Daikin“](https://github.com/lorbetzki/net.lorbetzki.faikin4daikin) von Kris, der die Weiterentwicklung seiner Module 2025 beendet und zur Übernahme freigegeben hat ([Forum](https://community.symcon.de/t/supportende-meiner-module/141740)). Danke, Kris, für die Vorarbeit! Der Code ist neu geschrieben; die Namen der Variablen (Idents) sind dieselben, damit bestehende Variablen und Archive später übernommen werden können.
+
+## Inhalt
+
+1. [Funktionsumfang](#1-funktionsumfang)
+2. [Voraussetzungen](#2-voraussetzungen)
+3. [Einrichtung](#3-einrichtung)
+4. [Werte](#4-werte)
+5. [PHP-Befehle](#5-php-befehle)
+6. [Fehlersuche](#6-fehlersuche)
+7. [Lizenz und Markenhinweis](#7-lizenz-und-markenhinweis)
+
+## 1. Funktionsumfang
+
+- Liest alle Werte, die der Faikout meldet: Ein/Aus, Betriebsart, Solltemperatur, Lüfterstufe, Lamellen, Sonderfunktionen (Eco, Powerful, Komfort, Leise, Streamer …), Raum-/Außen-/Kältemitteltemperatur, Luftfeuchtigkeit, Lüfterdrehzahl, Kompressor, Energieverbrauch, Faikout-Automatik, BLE-Sensor, Geräte- und Fehlermeldungen.
+- Eine Variable entsteht erst, wenn der Faikout den Wert meldet – nicht jedes Klimagerät hat jede Funktion.
+- Jeder Wert lässt sich einzeln an- oder abwählen. Archivierte Werte bleiben beim Abwählen erhalten.
+- Wertet die Nachrichten-Arten des Faikout getrennt aus (Gerätestatus, Klimagerät-Status, regelmäßiger Bericht, Einstellungen, Fehler). Werte für Home Assistant, die unter gleichem Namen etwas anderes bedeuten (z. B. „temp“ = Raumtemperatur), werden nicht verwechselt.
+- Erkennt den Faikout am Hostnamen und an seiner Geräte-ID.
+- Fragt den Status jede Minute an, falls der Faikout ihn nicht von selbst schickt.
+- Meldet, wenn 5 Minuten lang nichts mehr kommt.
+
+## 2. Voraussetzungen
+
+- Symcon ab 8.0
+- Ein Faikout/Faikin-Modul mit aktueller Firmware ([Projekt auf Codeberg](https://codeberg.org/RevK/ESP32-Faikout))
+- Eine MQTT-Server-Instanz in Symcon (Splitter „MQTT Server“)
+
+## 3. Einrichtung
+
+1. **Faikout:** In der Weboberfläche des Faikout einen Hostnamen vergeben (z. B. `Wohnzimmer`). Als MQTT-Server die IP-Adresse von Symcon eintragen, Port 1883 (falls nicht geändert), dazu Benutzer und Passwort der MQTT-Server-Instanz in Symcon.
+2. **Symcon:** In der Modulverwaltung die URL `https://github.com/peterchrisben/Faikout` hinzufügen.
+3. Instanz **„Faikout Daikin“** anlegen. Als Gateway den MQTT-Server wählen.
+4. Im Formular den **Hostnamen** des Faikout eintragen, „Änderungen übernehmen“.
+5. Nach wenigen Sekunden erscheinen die Werte. Im Formular steht „Letzte Nachricht …“.
+
+Pro Klimagerät eine Instanz. Das Modul kann parallel zu „Faikin 4 Daikin“ laufen (eigene Modul-ID), auch für dasselbe Gerät.
+
+### Einstellungen
+
+| Einstellung | Bedeutung |
+|---|---|
+| Hostname des Faikout | Wie in der Weboberfläche des Faikout eingestellt. Die Geräte-ID lernt das Modul selbst. |
+| Werte auswählen | Haken = Wert anzeigen. Gespeichert wird erst mit „Änderungen übernehmen“. |
+
+Tipp: Mit **„Live-Status“** in der Weboberfläche des Faikout kommen Änderungen sofort. Ohne Live-Status fragt das Modul jede Minute nach. Unter dem Knopf „Status jetzt anfordern“ zeigt das Formular, wie der Faikout eingestellt ist.
+
+## 4. Werte
+
+| Gruppe | Werte (Ident) |
+|---|---|
+| Betrieb | Eingeschaltet (`status_power`), Betriebsart (`status_mode`: 1 Heizen, 2 Kühlen, 3 Automatik, 4 Lüften, 5 Entfeuchten), Solltemperatur (`status_temp`), Lüfterstufe (`status_fan`: -1 Nacht, 0 Automatik, 1–5), Lamellen vertikal/horizontal (`status_swingv`, `status_swingh`), Eco (`status_econo`), Powerful (`status_powerful`), Komfort-Luftstrom (`status_comfort`), Leises Außengerät (`status_quiet`), Präsenzsensor (`status_sensor`), Streamer (`status_streamer`), LED (`status_led`), Leistungsbegrenzung (`status_demand`, aus), Heizbetrieb (`status_heat`), Klimagerät erreichbar (`status_online`), Externe Regelung (`status_control`, aus), Heizen/Kühlen gesperrt (`status_slave`, aus), Frostschutz (`status_antifreeze`) |
+| Messwerte | Raum- (`status_home`), Außen- (`status_outside`), Ansaug- (`status_inlet`), Kältemitteltemperatur (`status_liquid`), Luftfeuchtigkeit (`status_hum`), Lüfterdrehzahl (`status_fanrpm`), Kompressor-Frequenz (`status_comp`) |
+| Energie | gesamt (`status_Wh`), Heizen (`status_Whheating`), Kühlen (`status_Whcooling`) – in kWh |
+| Faikout-Automatik | freigegeben (`status_autoe`), automatisch ein/aus (`status_autop`), Solltemperatur (`status_autot`), Bereich ± (`status_autor`), Ein-/Ausschaltzeit (`status_autoon`, `status_autooff`, „–“ = keine), Referenztemperatur (`status_env`) |
+| BLE-Sensor | Name (`status_autob`), Temperatur, Luftfeuchtigkeit, Batterie, Spannung (aus) |
+| Gerät | Faikout verbunden (`state_up`), Modell, IP-Adresse, Firmware-Version, WLAN-Netz und -Signal (aus) |
+| Fehler | Letzte Fehlermeldung (`error_description`), zuletzt abgelehnte Änderung (`error_failed_set`) |
+
+„(aus)“ = standardmäßig nicht angehakt.
+
+Im regelmäßigen Bericht des Faikout stehen Werte, die sich im Berichtszeitraum geändert haben, als Minimum/Mittel/Maximum – das Modul nimmt den Mittelwert. Schaltzustände, die sich im Zeitraum geändert haben, übernimmt es aus dem Bericht nicht, sondern aus der nächsten Statusmeldung.
+
+### Umstieg von „Faikin 4 Daikin“
+
+Ist das Modul später als Update von „Faikin 4 Daikin“ im Store (in Absprache mit Kris), bleiben die Variablen mit ihren IDs erhalten. Ersetzt werden nur:
+
+- `status_auto0`/`status_auto1` (Zeitstempel) → `status_autooff`/`status_autoon` (Text „hh:mm“)
+- `status_ipv4` (doppelt) → `state_ipv4`
+
+Die alten werden gelöscht – außer sie werden archiviert.
+
+## 5. PHP-Befehle
+
+```php
+FAIKOUT_RequestStatus(int $InstanzID): bool;          // Status und Einstellungen beim Faikout anfordern
+FAIKOUT_SelectAllValues(int $InstanzID, bool $Show);  // im offenen Formular alle Werte an-/abhaken
+```
+
+## 6. Fehlersuche
+
+- **Ganz unten im Formular** steht die installierte Version, z. B. „Faikout 1.0 (Build 1)“ – so sieht man, ob ein Update angekommen ist. Nach einem Update offene Formulare schließen und neu öffnen.
+- **„Noch keine Nachricht“:** MQTT-Einstellungen im Faikout prüfen (Server = IP von Symcon, Benutzer/Passwort der MQTT-Server-Instanz). In der Weboberfläche des Faikout muss MQTT verbunden sein.
+- **Debug:** Im Debug-Fenster der Instanz steht jede Nachricht mit Topic und Inhalt. Bei Problemen bitte einen Ausschnitt davon schicken.
+
+## 7. Lizenz und Markenhinweis
+
+Lizenz: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) – Peter Chrisben.
+
+Daikin, Faikout und Faikin sind Marken ihres jeweiligen Inhabers. Faikout 4 Daikin ist ein privates Projekt und steht in keiner Verbindung zu den Herstellern.

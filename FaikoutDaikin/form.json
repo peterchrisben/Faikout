@@ -1,0 +1,123 @@
+{
+    "elements": [
+        {
+            "type": "Label",
+            "name": "Overview",
+            "caption": ""
+        },
+        {
+            "type": "ValidationTextBox",
+            "name": "Hostname",
+            "caption": "Hostname of the Faikout (as set in its web interface)",
+            "width": "400px"
+        },
+        {
+            "type": "Label",
+            "caption": "The Faikout sends its data to the MQTT server of Symcon. In its web interface, enter the IP address of Symcon as MQTT server (port 1883 unless changed) and the user and password of the MQTT server instance."
+        },
+        {
+            "type": "ExpansionPanel",
+            "caption": "Select values",
+            "items": [
+                {
+                    "type": "Label",
+                    "caption": "A value only appears once the Faikout reports it – not every air conditioner has every function. Unticked values are removed, unless they are archived: then they stay and keep being updated. To remove such a value, switch off its archiving first."
+                },
+                {
+                    "type": "List",
+                    "name": "ValueSelection",
+                    "caption": "Values",
+                    "rowCount": 15,
+                    "add": false,
+                    "delete": false,
+                    "loadValuesFromConfiguration": false,
+                    "columns": [
+                        {
+                            "caption": "Show",
+                            "name": "Show",
+                            "width": "80px",
+                            "edit": {
+                                "type": "CheckBox"
+                            }
+                        },
+                        {
+                            "caption": "Group",
+                            "name": "Group",
+                            "width": "150px"
+                        },
+                        {
+                            "caption": "Name",
+                            "name": "Name",
+                            "width": "auto"
+                        },
+                        {
+                            "caption": "Current value",
+                            "name": "Value",
+                            "width": "160px"
+                        },
+                        {
+                            "caption": "Archive",
+                            "name": "Archive",
+                            "width": "170px"
+                        },
+                        {
+                            "caption": "Ident",
+                            "name": "Ident",
+                            "width": "0px",
+                            "visible": false,
+                            "save": true
+                        }
+                    ]
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "Button",
+                            "caption": "Tick all",
+                            "onClick": "FAIKOUT_SelectAllValues($id, true);"
+                        },
+                        {
+                            "type": "Button",
+                            "caption": "Untick all",
+                            "onClick": "FAIKOUT_SelectAllValues($id, false);"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "type": "Button",
+            "caption": "Request status now",
+            "onClick": "IPS_RequestAction($id, 'RequestStatus', '');"
+        },
+        {
+            "type": "Label",
+            "name": "DeviceInfo",
+            "caption": ""
+        },
+        {
+            "type": "Label",
+            "caption": "This build only reads values. Controlling the air conditioner follows in the next build."
+        }
+    ],
+    "status": [
+        {
+            "code": 104,
+            "icon": "inactive",
+            "caption": "Please enter the hostname of the Faikout"
+        },
+        {
+            "code": 201,
+            "icon": "error",
+            "caption": "No message from the Faikout for 5 minutes"
+        },
+        {
+            "code": 202,
+            "icon": "error",
+            "caption": "MQTT server not active"
+        }
+    ]
+}
