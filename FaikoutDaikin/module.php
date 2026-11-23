@@ -76,6 +76,8 @@ class FaikoutDaikin extends IPSModule
         $this->RegisterAttributeBoolean('LegacyControl', false);
         $this->RegisterAttributeString('Pending', '{}');
         $this->RegisterAttributeString('LastControl', '');
+        // Same name as in Kris' module: option "night mode when switching on" is kept on update
+        $this->RegisterAttributeBoolean('silentModeOnStart', false);
 
         $this->RegisterTimer('Refresh', 0, 'IPS_RequestAction($_IPS[\'TARGET\'], \'Refresh\', \'\');');
         $this->RegisterTimer('Verify', 0, 'IPS_RequestAction($_IPS[\'TARGET\'], \'Verify\', \'\');');
@@ -132,9 +134,26 @@ class FaikoutDaikin extends IPSModule
             case 'RevokeLegacy':
                 $this->RevokeLegacyControl();
                 return;
+            case 'SendSettings':
+                $this->SendDeviceSettings((string) $Value);
+                return;
+            case 'manual_restart': // ident of Kris' module
+                $this->RestartDevice();
+                return;
+            case 'reload_setting': // ident of Kris' module
+                $this->ReloadSettings();
+                return;
         }
         if (isset(FaikoutCatalog::CONTROLS[$Ident])) {
             $this->Control($Ident, $Value);
+            return;
+        }
+        if (isset(FaikoutCatalog::SETTING_CONTROLS[$Ident])) {
+            $this->ControlSetting($Ident, (bool) $Value);
+            return;
+        }
+        if (in_array($Ident, FaikoutCatalog::LOCAL_CONTROLS, true)) {
+            $this->SetSilentModeOnStart((bool) $Value);
             return;
         }
         throw new Exception('Invalid ident: ' . $Ident);
@@ -212,6 +231,39 @@ class FaikoutDaikin extends IPSModule
         $this->UpdateFormField('ValueSelection', 'values', json_encode($rows));
     }
 
+    // Functions of Kris' module "Faikin 4 Daikin" (FAIKIN_…), kept so existing scripts keep working
+
+    /** Sets the Faikout setting "dark": true = LED of the Faikout off (meaning as in Kris' module). */
+    public function SetFaikinLed(bool $state): void
+    {
+        $this->ControlSetting('setting_dark', $state);
+    }
+
+    /** Option: switching on also sets the fan to night (quiet). */
+    public function SetSilentModeOnStart(bool $state): void
+    {
+        $this->WriteAttributeBoolean('silentModeOnStart', $state);
+        if (@$this->GetIDForIdent('silentModeOnStart') !== false) {
+            $this->SetValue('silentModeOnStart', $state);
+        }
+    }
+
+    /** Restarts the Faikout (not the air conditioner). */
+    public function RestartDevice(): void
+    {
+        $this->RequireControl();
+        $this->Publish('command/' . $this->Hostname() . '/restart', '');
+        $this->ShowControlResult($this->Translate('Restart of the Faikout requested.'));
+    }
+
+    /** Asks the Faikout for its settings. */
+    public function ReloadSettings(): void
+    {
+        if ($this->Hostname() !== '' && $this->HasActiveParent()) {
+            $this->Publish('setting/' . $this->Hostname(), '');
+        }
+    }
+
     // ------------------------------------------------------------ receiving
 
     /** state/<host>: false = Faikout offline (last will), otherwise its own state. */
@@ -286,6 +338,14 @@ class FaikoutDaikin extends IPSModule
         }
         $this->WriteAttributeString('DeviceSettings', json_encode($known));
         $this->UpdateFormField('DeviceInfo', 'caption', $this->DeviceInfoText());
+        foreach (FaikoutCatalog::SETTING_CONTROLS as $ident => $field) {
+            if (array_key_exists($field, $payload)) {
+                $this->StoreValue($ident, $payload[$field]);
+            }
+        }
+        if ($this->PendingList() !== []) {
+            $this->VerifyPending();
+        }
     }
 
     private function HandleError(string $what, $payload, string $raw): void
@@ -399,6 +459,12 @@ class FaikoutDaikin extends IPSModule
                 $this->RegisterValue($ident);
             } elseif ($exists && !$this->IsArchived($ident)) {
                 $this->UnregisterVariable($ident);
+            }
+        }
+        if (@$this->GetIDForIdent('silentModeOnStart') !== false) {
+            $option = $this->ReadAttributeBoolean('silentModeOnStart');
+            if ($this->GetValue('silentModeOnStart') !== $option) {
+                $this->SetValue('silentModeOnStart', $option);
             }
         }
         foreach (FaikoutCatalog::LEGACY as $ident) {
@@ -521,7 +587,52 @@ class FaikoutDaikin extends IPSModule
 
     private function IsControllable(string $ident): bool
     {
-        return isset(FaikoutCatalog::CONTROLS[$ident]) && $this->ControlAllowed();
+        return $this->IsControlIdent($ident) && $this->ControlAllowed();
+    }
+
+    private function IsControlIdent(string $ident): bool
+    {
+        return isset(FaikoutCatalog::CONTROLS[$ident]) || isset(FaikoutCatalog::SETTING_CONTROLS[$ident])
+            || in_array($ident, FaikoutCatalog::LOCAL_CONTROLS, true);
+    }
+
+    /** Throws a clear message if control is not allowed or the Faikout cannot be reached. */
+    private function RequireControl(): void
+    {
+        if (!$this->ControlAllowed()) {
+            throw new Exception($this->Translate('Control is not allowed. Tick "Allow control" in the instance.'));
+        }
+        if ($this->Hostname() === '' || !$this->HasActiveParent()) {
+            throw new Exception($this->Translate('The Faikout cannot be reached: hostname missing or MQTT server not active.'));
+        }
+    }
+
+    /** Sends a setting of the Faikout itself (setting/<host>) and asks for the settings to confirm it. */
+    private function ControlSetting(string $ident, bool $value): void
+    {
+        $this->RequireControl();
+        $field = FaikoutCatalog::SETTING_CONTROLS[$ident];
+        $this->Publish('setting/' . $this->Hostname(), json_encode([$field => $value]));
+        $this->Publish('setting/' . $this->Hostname(), '');
+        $this->AddPending($ident, $value);
+        $this->ShowControlResult(sprintf($this->Translate('Sent: %s → %s'), $this->ValueName($ident), $this->FormatValue($ident, $value)));
+    }
+
+    /** Button "Send to Faikout" in the form: reporting interval, live status, Home Assistant. */
+    private function SendDeviceSettings(string $json): void
+    {
+        $input = json_decode($json, true);
+        if (!is_array($input) || $this->Hostname() === '' || !$this->HasActiveParent()) {
+            return;
+        }
+        $settings = [
+            'reporting'  => max(0, min(3600, (int) ($input['reporting'] ?? 60))),
+            'livestatus' => (bool) ($input['livestatus'] ?? false),
+            'haenable'   => (bool) ($input['haenable'] ?? true)
+        ];
+        $this->Publish('setting/' . $this->Hostname(), json_encode($settings));
+        $this->Publish('setting/' . $this->Hostname(), '');
+        $this->ShowControlResult($this->Translate('Settings sent to the Faikout.'));
     }
 
     /**
@@ -531,7 +642,10 @@ class FaikoutDaikin extends IPSModule
      */
     private function DetectLegacyControl(): void
     {
-        foreach (array_keys(FaikoutCatalog::CONTROLS) as $ident) {
+        foreach (array_keys(FaikoutCatalog::VALUES) as $ident) {
+            if (!$this->IsControlIdent($ident)) {
+                continue;
+            }
             $id = @$this->GetIDForIdent($ident);
             if ($id !== false && IPS_GetVariable($id)['VariableAction'] === $this->InstanceID) {
                 $this->WriteAttributeBoolean('LegacyControl', true);
@@ -552,22 +666,23 @@ class FaikoutDaikin extends IPSModule
     /** Sends one change to the Faikout. The variable follows the answer of the device, it is not set in advance. */
     private function Control(string $ident, $value): void
     {
-        if (!$this->ControlAllowed()) {
-            throw new Exception($this->Translate('Control is not allowed. Tick "Allow control" in the instance.'));
-        }
-        $host = $this->Hostname();
-        if ($host === '' || !$this->HasActiveParent()) {
-            throw new Exception($this->Translate('The Faikout cannot be reached: hostname missing or MQTT server not active.'));
-        }
+        $this->RequireControl();
         [$field] = FaikoutCatalog::CONTROLS[$ident];
         $command = [$field => $this->CommandValue($ident, $value)];
         if ($ident === 'status_temp' && $this->AutoActive()) {
             // Faikout auto sets the target itself from autot → move autot along (as Home Assistant does)
             $command['autot'] = $command['temp'];
         }
-        $this->Publish('command/' . $host, json_encode($command));
+        $silent = $ident === 'status_power' && $command['power'] === true && $this->ReadAttributeBoolean('silentModeOnStart');
+        if ($silent) {
+            $command['fan'] = 'Q'; // option of Kris' module: switch on in night mode
+        }
+        $this->Publish('command/' . $this->Hostname(), json_encode($command));
         $expected = $this->ExpectedValue($ident, $command[$field]);
         $this->AddPending($ident, $expected);
+        if ($silent) {
+            $this->AddPending('status_fan', -1);
+        }
         $this->ShowControlResult(sprintf($this->Translate('Sent: %s → %s'), $this->ValueName($ident), $this->FormatValue($ident, $expected)));
     }
 
@@ -679,7 +794,7 @@ class FaikoutDaikin extends IPSModule
             return;
         }
         foreach (array_keys($pending) as $ident) {
-            $field = FaikoutCatalog::CONTROLS[$ident][0];
+            $field = FaikoutCatalog::CONTROLS[$ident][0] ?? FaikoutCatalog::SETTING_CONTROLS[$ident] ?? '';
             $hit = ($what === 'control' && ($payload['field'] ?? '') === $field) || ($what === 'failed-set' && array_key_exists($field, $payload));
             if ($hit) {
                 $reason = (string) ($payload['error'] ?? $this->Translate('the air conditioner refused the change'));
@@ -760,6 +875,10 @@ class FaikoutDaikin extends IPSModule
 
     private function IsSeen(string $ident): bool
     {
+        // Module options only matter once control is allowed
+        if (in_array($ident, FaikoutCatalog::ALWAYS_SEEN, true)) {
+            return $this->ControlAllowed();
+        }
         return in_array($ident, $this->SeenList(), true);
     }
 
@@ -827,6 +946,15 @@ class FaikoutDaikin extends IPSModule
                     break;
                 case 'ControlResult':
                     $item['caption'] = $this->ReadAttributeString('LastControl');
+                    break;
+                case 'DevReporting':
+                case 'DevLivestatus':
+                case 'DevHA':
+                    $settings = json_decode($this->ReadAttributeString('DeviceSettings'), true);
+                    $key = ['DevReporting' => 'reporting', 'DevLivestatus' => 'livestatus', 'DevHA' => 'haenable'][$item['name']];
+                    if (is_array($settings) && array_key_exists($key, $settings)) {
+                        $item['value'] = $item['name'] === 'DevReporting' ? (int) $settings[$key] : (bool) $settings[$key];
+                    }
                     break;
                 case 'LegacyInfo':
                 case 'RevokeLegacy':

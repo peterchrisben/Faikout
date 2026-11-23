@@ -1,5 +1,5 @@
 {
-    "id": "{226CE5BA-F393-4CF6-BD59-6126A24FEC73}",
+    "id": "{190A01E7-297D-46AC-8B8D-AD140CC06B3E}",
     "name": "FaikoutDaikin",
     "type": 3,
     "vendor": "Daikin",
@@ -13,6 +13,6 @@
     "implemented": [
         "{7F7632D9-FA40-4F38-8DEA-C83CD4325A32}"
     ],
-    "prefix": "FAIKOUT",
+    "prefix": "FAIKIN",
     "url": "https://github.com/peterchrisben/Faikout"
 }

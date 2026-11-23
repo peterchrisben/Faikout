@@ -44,6 +44,7 @@ final class FaikoutCatalog
         'status_control'    => [self::GROUP_OPERATION, 'External control active', VARIABLETYPE_BOOLEAN, 'yesno', 26, false],
         'status_slave'      => [self::GROUP_OPERATION, 'Heat/cool locked by another unit', VARIABLETYPE_BOOLEAN, 'yesno', 27, false],
         'status_antifreeze' => [self::GROUP_OPERATION, 'Antifreeze active', VARIABLETYPE_BOOLEAN, 'yesno', 28, true],
+        'silentModeOnStart' => [self::GROUP_OPERATION, 'Night mode when switching on', VARIABLETYPE_BOOLEAN, 'onoff', 29, true],
 
         'status_home'       => [self::GROUP_MEASURE, 'Room temperature', VARIABLETYPE_FLOAT, 'temp', 30, true],
         'status_outside'    => [self::GROUP_MEASURE, 'Outside temperature', VARIABLETYPE_FLOAT, 'temp', 31, true],
@@ -78,6 +79,7 @@ final class FaikoutCatalog
         'state_version'     => [self::GROUP_DEVICE, 'Firmware version', VARIABLETYPE_STRING, 'text', 83, true],
         'state_ssid'        => [self::GROUP_DEVICE, 'WiFi network', VARIABLETYPE_STRING, 'text', 84, false],
         'state_rssi'        => [self::GROUP_DEVICE, 'WiFi signal', VARIABLETYPE_INTEGER, 'dbm', 85, false],
+        'setting_dark'      => [self::GROUP_DEVICE, 'LED of the Faikout off', VARIABLETYPE_BOOLEAN, 'onoff', 86, true],
 
         'error_description' => [self::GROUP_ERROR, 'Last error', VARIABLETYPE_STRING, 'text', 90, true],
         'error_failed_set'  => [self::GROUP_ERROR, 'Last rejected change', VARIABLETYPE_STRING, 'text', 91, true]
@@ -152,6 +154,17 @@ final class FaikoutCatalog
         'status_autot'    => ['autot', 'number', 16, 32, 0.5],
         'status_autor'    => ['autor', 'number', 0, 5, 0.5]
     ];
+
+    /**
+     * Controls that are not air-con values (same idents as in Kris' module):
+     * setting_dark = setting "dark" of the Faikout (its LED), sent to setting/<host>;
+     * silentModeOnStart = module option, switching on also sets the fan to night (quiet).
+     */
+    public const SETTING_CONTROLS = ['setting_dark' => 'dark'];
+    public const LOCAL_CONTROLS = ['silentModeOnStart'];
+
+    /** Values that exist without being reported (module options) */
+    public const ALWAYS_SEEN = ['silentModeOnStart'];
 
     /** Fields of the BLE object ("ble": {...}) in state/<host>/status => ident */
     public const BLE_FIELDS = [

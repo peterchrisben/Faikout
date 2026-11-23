@@ -8,7 +8,7 @@ declare(strict_types=1);
  */
 final class FaikoutVersion
 {
-    private const NAME = 'Faikout';
+    private const NAME = 'Faikout 4 Daikin';
 
     public static function Text(): string
     {

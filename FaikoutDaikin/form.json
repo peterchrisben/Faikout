@@ -94,12 +94,12 @@
                         {
                             "type": "Button",
                             "caption": "Tick all",
-                            "onClick": "FAIKOUT_SelectAllValues($id, true);"
+                            "onClick": "FAIKIN_SelectAllValues($id, true);"
                         },
                         {
                             "type": "Button",
                             "caption": "Untick all",
-                            "onClick": "FAIKOUT_SelectAllValues($id, false);"
+                            "onClick": "FAIKIN_SelectAllValues($id, false);"
                         }
                     ]
                 }
@@ -121,6 +121,54 @@
             "type": "Label",
             "name": "ControlResult",
             "caption": ""
+        },
+        {
+            "type": "ExpansionPanel",
+            "caption": "Settings of the Faikout",
+            "items": [
+                {
+                    "type": "Label",
+                    "caption": "These settings are stored in the Faikout itself. \"Live status\" sends every change at once – recommended."
+                },
+                {
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "NumberSpinner",
+                            "name": "DevReporting",
+                            "caption": "Report interval (seconds, 0 = off)",
+                            "minimum": 0,
+                            "maximum": 3600,
+                            "width": "260px",
+                            "value": 60
+                        },
+                        {
+                            "type": "CheckBox",
+                            "name": "DevLivestatus",
+                            "caption": "Live status",
+                            "value": false
+                        },
+                        {
+                            "type": "CheckBox",
+                            "name": "DevHA",
+                            "caption": "Messages for Home Assistant",
+                            "value": true
+                        }
+                    ]
+                },
+                {
+                    "type": "Button",
+                    "caption": "Send to the Faikout",
+                    "confirm": "Send these settings to the Faikout?",
+                    "onClick": "IPS_RequestAction($id, 'SendSettings', json_encode(['reporting' => $DevReporting, 'livestatus' => $DevLivestatus, 'haenable' => $DevHA]));"
+                },
+                {
+                    "type": "Button",
+                    "caption": "Restart the Faikout",
+                    "confirm": "Restart the Faikout now? The air conditioner keeps running.",
+                    "onClick": "FAIKIN_RestartDevice($id);"
+                }
+            ]
         }
     ],
     "status": [

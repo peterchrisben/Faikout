@@ -16,4 +16,8 @@
 | Ablehnung | Funktion schalten, die das Gerät nicht hat → Meldung im Formular/Meldungsfenster | Build 2 | offen |
 | Aktuelle Leistung | `status_consumption` = W aus der Weboberfläche | Build 2 | offen |
 | Schieberegler/Aufzählung in der App | Solltemperatur, Betriebsart, Lüfter in der Symcon-App ansehen | Build 2 | offen |
-| Übernahme Kris-Instanz | nach Store-Übergabe: Steuern geht weiter, Hinweis + Knopf „Freigabe zurücknehmen“ | bei Store-Übergabe | offen |
+| Übernahme Kris-Instanz | Store-Update auf Beta: Variablen bleiben, Steuern geht weiter, Hinweis + Knopf „Freigabe zurücknehmen“, `FAIKIN_…`-Skripte laufen | Build 3 (Beta) | offen |
+| Übernahme von Stable 1.5.2 | ein Nutzer mit 1.5.2 aktualisiert (später über Stable) | nach Beta | offen |
+| Nachtmodus beim Einschalten | Option an → Einschalten → Lüfter steht auf Nacht | Build 3 | offen |
+| LED am Faikout | „LED am Faikout aus“ schalten → LED geht aus, Variable folgt | Build 3 | offen |
+| Faikout-Einstellungen | Live-Status im Formular einschalten und senden → Weboberfläche zeigt es | Build 3 | offen |

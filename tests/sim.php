@@ -242,7 +242,7 @@ check('Alle anhaken', count(array_filter($rows, fn($r) => !$r['Show'])) === 0 &&
 $form = json_decode(Stub::$instances[$id]->GetConfigurationForm(), true);
 check('Formular ist JSON', is_array($form));
 $last = end($form['actions']);
-check('Versionszeile zuletzt', ($last['type'] ?? '') === 'Label' && str_starts_with($last['caption'], 'Faikout 1.0 (Build '));
+check('Versionszeile zuletzt', ($last['type'] ?? '') === 'Label' && str_starts_with($last['caption'], 'Faikout 4 Daikin 2.0 (Build '));
 $list = findItem($form['elements'], 'ValueSelection');
 check('Werteliste vollständig', count($list['values']) === count(FaikoutCatalog::VALUES));
 $row = array_values(array_filter($list['values'], fn($r) => $r['Ident'] === 'status_outside'))[0];
@@ -409,6 +409,61 @@ check('ersetzte Variable gelöscht', vid($old, 'status_auto0') === 0 && vid($old
 check('ersetzte, aber archivierte Variable bleibt', vid($old, 'status_auto1') === $arcId);
 receive($old, 'state/30AEA4BEEF02/status', ['mode' => 'C', 'auto1' => '06:15']);
 check('alte Geräte-ID (klein gespeichert) erkannt', val($old, 'status_mode') === 2 && val($old, 'status_autoon') === '06:15');
+
+// ---------------------------------------------------------------- 15 functions of Kris' module
+$k = Stub::CreateInstance($class, ['Hostname' => 'KrisAC']);
+sent($k);
+check('ohne Freigabe kein Nachtmodus-Schalter', vid($k, 'silentModeOnStart') === 0);
+try {
+    Stub::Call($k, 'RestartDevice');
+    check('Neustart ohne Freigabe abgelehnt', false);
+} catch (Exception $e) {
+    check('Neustart ohne Freigabe abgelehnt', sent($k) === []);
+}
+IPS_SetProperty($k, 'AllowControl', true);
+IPS_ApplyChanges($k);
+sent($k);
+check('mit Freigabe: Nachtmodus-Schalter da', vid($k, 'silentModeOnStart') > 0 && val($k, 'silentModeOnStart') === false
+    && Stub::$objects[vid($k, 'silentModeOnStart')]['action'] === $k);
+receive($k, 'state/KrisAC/status', $realStatus);
+RequestAction(vid($k, 'status_power'), true);
+check('Einschalten ohne Nachtmodus', commands($k) === [['command/KrisAC', ['power' => true]]]);
+RequestAction(vid($k, 'silentModeOnStart'), true);
+check('Nachtmodus-Option gesetzt', val($k, 'silentModeOnStart') === true && attr($k, 'silentModeOnStart') === true && sent($k) === []);
+RequestAction(vid($k, 'status_power'), true);
+check('Einschalten mit Nachtmodus', commands($k) === [['command/KrisAC', ['power' => true, 'fan' => 'Q']]]);
+Stub::Call($k, 'SetSilentModeOnStart', false);
+check('SetSilentModeOnStart', val($k, 'silentModeOnStart') === false);
+
+receive($k, 'setting/KrisAC', ['reporting' => 60, 'livestatus' => false, 'haenable' => true, 'dark' => false]);
+check('LED-Einstellung gelesen', val($k, 'setting_dark') === false);
+Stub::Call($k, 'SetFaikinLed', true);
+check('SetFaikinLed schickt dark', commands($k) === [['setting/KrisAC', ['dark' => true]], ['setting/KrisAC', null]]);
+receive($k, 'setting/KrisAC', ['dark' => true]);
+check('LED bestätigt', val($k, 'setting_dark') === true && str_contains(attr($k, 'LastControl'), 'Übernommen: LED am Faikout aus → An'));
+Stub::Call($k, 'RestartDevice');
+check('Neustart', sent($k) === ['command/KrisAC/restart']);
+IPS_RequestAction($k, 'manual_restart', '');
+check('Kris-Ident manual_restart', sent($k) === ['command/KrisAC/restart']);
+Stub::Call($k, 'ReloadSettings');
+check('Einstellungen anfordern', sent($k) === ['setting/KrisAC']);
+IPS_RequestAction($k, 'SendSettings', json_encode(['reporting' => 30, 'livestatus' => true, 'haenable' => false]));
+check('Einstellungen senden', commands($k) === [['setting/KrisAC', ['reporting' => 30, 'livestatus' => true, 'haenable' => false]], ['setting/KrisAC', null]]);
+$form = json_decode(Stub::$instances[$k]->GetConfigurationForm(), true);
+check('Formular zeigt Geräte-Einstellungen', findItem($form['actions'], 'DevReporting')['value'] === 60 && findItem($form['actions'], 'DevHA')['value'] === true);
+
+// Kris 1.8.2 instance: option attribute and variables are taken over
+$kr = Stub::CreateInstance($class);
+$silentId = $mk($kr, 'silentModeOnStart', 0, true, '~Switch', true);
+$darkId = $mk($kr, 'setting_dark', 0, false, '~Switch', true);
+setAttr($kr, 'silentModeOnStart', true);
+setAttr($kr, 'LegacyChecked', false);
+IPS_SetProperty($kr, 'Hostname', 'OldAC');
+IPS_ApplyChanges($kr);
+sent($kr);
+check('Kris 1.8.2: Freigabe über Nachtmodus-Schalter erkannt', attr($kr, 'LegacyControl') === true);
+check('Kris 1.8.2: Variablen bleiben mit Aktion', vid($kr, 'silentModeOnStart') === $silentId && Stub::$objects[$silentId]['action'] === $kr
+    && Stub::$objects[$darkId]['action'] === $kr && val($kr, 'silentModeOnStart') === true);
 
 // ---------------------------------------------------------------- 14 English console
 Stub::LoadLocale($dir, false);

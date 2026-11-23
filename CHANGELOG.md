@@ -1,5 +1,18 @@
 # Changelog
 
+## Version 2.0
+
+### Build 3 (23.11.2026)
+
+#### Geändert
+- Übernahme des Store-Eintrags „Faikin 4 Daikin“ (net.lorbetzki.faikin4daikin) von Kris: Bibliotheks- und Modul-ID sowie Präfix `FAIKIN` wie bei Kris – bestehende Instanzen bekommen das neue Modul als Update, Variablen und Archive bleiben. Name im Store: „Faikout 4 Daikin“.
+- Befehle jetzt `FAIKIN_…` statt `FAIKOUT_…`. Testinstanzen von Build 1/2 (eigene Test-IDs) neu anlegen.
+
+#### Neu
+- Funktionen aus Kris' Modul: `FAIKIN_SetFaikinLed`, `FAIKIN_SetSilentModeOnStart`, `FAIKIN_RestartDevice`, `FAIKIN_ReloadSettings`.
+- Variable „LED am Faikout aus“ (`setting_dark`) und Option „Beim Einschalten Nachtmodus“ (`silentModeOnStart`, Einschalten setzt dann den Lüfter auf Nacht).
+- Formular: Einstellungen des Faikout (Meldeintervall, Live-Status, Home Assistant) senden, Faikout neu starten.
+
 ## Version 1.0
 
 ### Build 2 (22.11.2026)
