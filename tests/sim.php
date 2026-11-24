@@ -386,6 +386,8 @@ $mk = function (int $inst, string $ident, int $type, $value, string $profile, bo
 $modeId = $mk($old, 'status_mode', 1, 2, 'FAIKIN_Mode', true);
 $autoId = $mk($old, 'status_auto0', 1, 1700000000, '~UnixTimestampTime', true);
 $ipId = $mk($old, 'status_ipv4', 3, '1.2.3.4', '', false);
+$mk($old, 'info_version', 3, '5298aa2d', '', false);
+$mk($old, 'info_up_to_date', 0, true, '~Switch', false);
 $arcId = $mk($old, 'status_auto1', 1, 1700000000, '~UnixTimestampTime', true);
 Stub::$archived[$arcId] = true;
 setAttr($old, 'state_id', '30aea4beef02'); // Kris stored it as received
@@ -406,6 +408,7 @@ IPS_ApplyChanges($old);
 check('bleibt zurückgenommen (nur einmal erkannt)', attr($old, 'LegacyControl') === false);
 check('alte Variable: Darstellung statt Profil', is_array(Stub::$objects[$modeId]['profile']));
 check('ersetzte Variable gelöscht', vid($old, 'status_auto0') === 0 && vid($old, 'status_ipv4') === 0);
+check('alte info_-Variablen gelöscht', vid($old, 'info_version') === 0 && vid($old, 'info_up_to_date') === 0);
 check('ersetzte, aber archivierte Variable bleibt', vid($old, 'status_auto1') === $arcId);
 receive($old, 'state/30AEA4BEEF02/status', ['mode' => 'C', 'auto1' => '06:15']);
 check('alte Geräte-ID (klein gespeichert) erkannt', val($old, 'status_mode') === 2 && val($old, 'status_autoon') === '06:15');

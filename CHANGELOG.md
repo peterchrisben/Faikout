@@ -2,6 +2,14 @@
 
 ## Version 2.0
 
+### Build 4 (24.11.2026)
+
+#### Geändert
+- „Energieverbrauch gesamt“ heißt jetzt „Energiezähler Außengerät“: Bei Multisplit melden alle Innengeräte (fast) denselben Zählerstand des gemeinsamen Außengeräts. Bestehende Variablen behalten ihren Namen (der gehört dem Benutzer).
+
+#### Behoben
+- Die alten Variablen `info_version` und `info_up_to_date` aus „Faikin 4 Daikin“ werden jetzt mit aufgeräumt (gelöscht, außer sie werden archiviert).
+
 ### Build 3 (23.11.2026)
 
 #### Geändert

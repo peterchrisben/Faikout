@@ -2,7 +2,7 @@
 
 Symcon-Modul für Daikin-Klimageräte mit einem **Faikout**-Modul (früher **Faikin**). Der Faikout ist eine kleine ESP32-Platine, die an die Service-Schnittstelle des Innengeräts (S21 bzw. X50) gesteckt wird und das Klimagerät lokal über MQTT bereitstellt – ohne Daikin-Cloud.
 
-**Aktuelle Version:** 2.0 (Build 3)
+**Aktuelle Version:** 2.0 (Build 4)
 
 Nachfolger von [„Faikin 4 Daikin“](https://github.com/lorbetzki/net.lorbetzki.faikin4daikin) von Kris, der die Weiterentwicklung seiner Module 2025 beendet und zur Übernahme freigegeben hat ([Forum](https://community.symcon.de/t/supportende-meiner-module/141740)). Danke, Kris, für die Vorarbeit! Der Code ist neu geschrieben. Modul-ID, Befehle (`FAIKIN_…`) und Variablen sind dieselben – es ist ein Update von „Faikin 4 Daikin“, bestehende Instanzen, Variablen und Archive bleiben erhalten.
 
@@ -64,7 +64,7 @@ Unter „Einstellungen des Faikout“ im Formular (unten) lassen sich Meldeinter
 |---|---|
 | Betrieb | Eingeschaltet (`status_power`), Betriebsart (`status_mode`: 1 Heizen, 2 Kühlen, 3 Automatik, 4 Lüften, 5 Entfeuchten), Solltemperatur (`status_temp`), Lüfterstufe (`status_fan`: -1 Nacht, 0 Automatik, 1–5), Lamellen vertikal/horizontal (`status_swingv`, `status_swingh`), Eco (`status_econo`), Powerful (`status_powerful`), Komfort-Luftstrom (`status_comfort`), Leises Außengerät (`status_quiet`), Präsenzsensor (`status_sensor`), Streamer (`status_streamer`), LED (`status_led`), Leistungsbegrenzung (`status_demand`), Beim Einschalten Nachtmodus (`silentModeOnStart`, Option des Moduls, nur mit Freigabe), Heizbetrieb (`status_heat`), Klimagerät erreichbar (`status_online`), Externe Regelung (`status_control`, aus), Heizen/Kühlen gesperrt (`status_slave`, aus), Frostschutz (`status_antifreeze`) |
 | Messwerte | Raum- (`status_home`), Außen- (`status_outside`), Ansaug- (`status_inlet`), Kältemitteltemperatur (`status_liquid`), Luftfeuchtigkeit (`status_hum`), Lüfterdrehzahl (`status_fanrpm`), Kompressor-Frequenz (`status_comp`) |
-| Energie | aktuelle Leistung in W (`status_consumption`), gesamt (`status_Wh`, Zähler des Außengeräts), Heizen (`status_Whheating`), Kühlen (`status_Whcooling`) – in kWh |
+| Energie | aktuelle Leistung in W (`status_consumption`), Energiezähler Außengerät (`status_Wh` – bei Multisplit für alle Innengeräte gemeinsam, jedes Innengerät meldet ihn mit), Heizen (`status_Whheating`), Kühlen (`status_Whcooling`) – in kWh |
 | Faikout-Automatik | freigegeben (`status_autoe`), automatisch ein/aus (`status_autop`), Solltemperatur (`status_autot`), Bereich ± (`status_autor`), Ein-/Ausschaltzeit (`status_autoon`, `status_autooff`, „–“ = keine), Referenztemperatur (`status_env`) |
 | BLE-Sensor | Name (`status_autob`), Temperatur, Luftfeuchtigkeit, Batterie, Spannung (aus) |
 | Gerät | Faikout verbunden (`state_up`), Modell, IP-Adresse, Firmware-Version, WLAN-Netz und -Signal (aus), LED am Faikout aus (`setting_dark`) |
@@ -92,6 +92,7 @@ Das Update kommt über den Store-Eintrag von „Faikin 4 Daikin“ (von Kris üb
 
 - `status_auto0`/`status_auto1` (Zeitstempel) → `status_autooff`/`status_autoon` (Text „hh:mm“)
 - `status_ipv4` (doppelt) → `state_ipv4`
+- `info_version` → `state_version` (Firmware-Version), `info_up_to_date` entfällt
 
 Die alten werden gelöscht – außer sie werden archiviert.
 
@@ -110,7 +111,7 @@ FAIKIN_SelectAllValues(int $InstanzID, bool $Show);       // im offenen Formular
 
 ## 6. Fehlersuche
 
-- **Ganz unten im Formular** steht die installierte Version, z. B. „Faikout 4 Daikin 2.0 (Build 3)“ – so sieht man, ob ein Update angekommen ist. Nach einem Update offene Formulare schließen und neu öffnen.
+- **Ganz unten im Formular** steht die installierte Version, z. B. „Faikout 4 Daikin 2.0 (Build 4)“ – so sieht man, ob ein Update angekommen ist. Nach einem Update offene Formulare schließen und neu öffnen.
 - **„Noch keine Nachricht“:** MQTT-Einstellungen im Faikout prüfen (Server = IP von Symcon, Benutzer/Passwort der MQTT-Server-Instanz). In der Weboberfläche des Faikout muss MQTT verbunden sein.
 - **Debug:** Im Debug-Fenster der Instanz steht jede Nachricht mit Topic und Inhalt. Bei Problemen bitte einen Ausschnitt davon schicken.
 

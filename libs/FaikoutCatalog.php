@@ -55,7 +55,8 @@ final class FaikoutCatalog
         'status_comp'       => [self::GROUP_MEASURE, 'Compressor frequency', VARIABLETYPE_INTEGER, 'hertz', 36, true],
 
         'status_consumption' => [self::GROUP_ENERGY, 'Current power', VARIABLETYPE_INTEGER, 'watt', 39, true],
-        'status_Wh'         => [self::GROUP_ENERGY, 'Energy total', VARIABLETYPE_FLOAT, 'kwh', 40, true],
+        // Meter of the outdoor unit: with multi-split all indoor units report (nearly) the same value
+        'status_Wh'         => [self::GROUP_ENERGY, 'Energy meter outdoor unit', VARIABLETYPE_FLOAT, 'kwh', 40, true],
         'status_Whheating'  => [self::GROUP_ENERGY, 'Energy heating', VARIABLETYPE_FLOAT, 'kwh', 41, true],
         'status_Whcooling'  => [self::GROUP_ENERGY, 'Energy cooling', VARIABLETYPE_FLOAT, 'kwh', 42, true],
 
@@ -196,6 +197,8 @@ final class FaikoutCatalog
     public const LEGACY = [
         'status_auto0', // now status_autooff (text instead of timestamp)
         'status_auto1', // now status_autoon
-        'status_ipv4'   // duplicate of state_ipv4
+        'status_ipv4',  // duplicate of state_ipv4
+        'info_version', // now state_version
+        'info_up_to_date'
     ];
 }

@@ -34,7 +34,6 @@
             "Humidity": "Luftfeuchtigkeit",
             "Fan speed (rpm)": "Lüfterdrehzahl",
             "Compressor frequency": "Kompressor-Frequenz",
-            "Energy total": "Energieverbrauch gesamt",
             "Energy heating": "Energieverbrauch Heizen",
             "Energy cooling": "Energieverbrauch Kühlen",
             "Timer and automatic power enabled": "Zeitschaltung und Automatik freigegeben",
@@ -125,7 +124,8 @@
             "Send to the Faikout": "An den Faikout senden",
             "Send these settings to the Faikout?": "Diese Einstellungen an den Faikout senden?",
             "Restart the Faikout": "Faikout neu starten",
-            "Restart the Faikout now? The air conditioner keeps running.": "Faikout jetzt neu starten? Das Klimagerät läuft weiter."
+            "Restart the Faikout now? The air conditioner keeps running.": "Faikout jetzt neu starten? Das Klimagerät läuft weiter.",
+            "Energy meter outdoor unit": "Energiezähler Außengerät"
         }
     }
 }
