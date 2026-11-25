@@ -2,7 +2,7 @@
 
 Symcon-Modul für Daikin-Klimageräte mit einem **Faikout**-Modul (früher **Faikin**). Der Faikout ist eine kleine ESP32-Platine, die an die Service-Schnittstelle des Innengeräts (S21 bzw. X50) gesteckt wird und das Klimagerät lokal über MQTT bereitstellt – ohne Daikin-Cloud.
 
-**Aktuelle Version:** 2.0 (Build 4)
+**Aktuelle Version:** 2.0 (Build 5)
 
 Nachfolger von [„Faikin 4 Daikin“](https://github.com/lorbetzki/net.lorbetzki.faikin4daikin) von Kris, der die Weiterentwicklung seiner Module 2025 beendet und zur Übernahme freigegeben hat ([Forum](https://community.symcon.de/t/supportende-meiner-module/141740)). Danke, Kris, für die Vorarbeit! Der Code ist neu geschrieben. Modul-ID, Befehle (`FAIKIN_…`) und Variablen sind dieselben – es ist ein Update von „Faikin 4 Daikin“, bestehende Instanzen, Variablen und Archive bleiben erhalten.
 
@@ -52,7 +52,7 @@ Pro Klimagerät eine Instanz.
 |---|---|
 | Hostname des Faikout | Wie in der Weboberfläche des Faikout eingestellt. Die Geräte-ID lernt das Modul selbst. |
 | Steuerung freigeben | Erst mit Haken lässt sich das Klimagerät aus Symcon schalten (Visualisierung, Ablaufpläne, Skripte). Ohne Haken sind alle Werte nur Anzeige. |
-| Werte auswählen | Haken = Wert anzeigen. Gespeichert wird erst mit „Änderungen übernehmen“. |
+| Werte auswählen | Haken = Wert anzeigen. Gespeichert wird erst mit „Änderungen übernehmen“. Haken weg löscht die Variable samt Verknüpfungen – außer sie wird archiviert, dann bleibt sie. Wieder anhaken legt sie neu an (mit neuer ID und Position). |
 
 ### Einstellungen des Faikout
 
@@ -111,7 +111,7 @@ FAIKIN_SelectAllValues(int $InstanzID, bool $Show);       // im offenen Formular
 
 ## 6. Fehlersuche
 
-- **Ganz unten im Formular** steht die installierte Version, z. B. „Faikout 4 Daikin 2.0 (Build 4)“ – so sieht man, ob ein Update angekommen ist. Nach einem Update offene Formulare schließen und neu öffnen.
+- **Ganz unten im Formular** steht die installierte Version, z. B. „Faikout 4 Daikin 2.0 (Build 5)“ – so sieht man, ob ein Update angekommen ist. Nach einem Update offene Formulare schließen und neu öffnen.
 - **„Noch keine Nachricht“:** MQTT-Einstellungen im Faikout prüfen (Server = IP von Symcon, Benutzer/Passwort der MQTT-Server-Instanz). In der Weboberfläche des Faikout muss MQTT verbunden sein.
 - **Debug:** Im Debug-Fenster der Instanz steht jede Nachricht mit Topic und Inhalt. Bei Problemen bitte einen Ausschnitt davon schicken.
 

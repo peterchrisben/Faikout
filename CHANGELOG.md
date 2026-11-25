@@ -2,6 +2,15 @@
 
 ## Version 2.0
 
+### Build 5 (25.11.2026)
+
+#### Behoben
+- Formular unter Symcon 9.1: Lange Beschriftungen von Eingabefeldern wurden umgebrochen und über das Feld darüber gelegt. „Hostname des Faikout“ und „Meldeintervall (Sekunden)“ sind jetzt kurz, die Hinweise stehen im Text darunter bzw. darüber. Einstellungen bleiben erhalten.
+
+#### Dokumentation
+- README: Hinweis, dass Abwählen eines Werts die Variable löscht (außer sie wird archiviert).
+- Neue Prüfung `tests/check_captions.py`: Beschriftungen von Eingabefeldern höchstens 38 Zeichen.
+
 ### Build 4 (24.11.2026)
 
 #### Geändert

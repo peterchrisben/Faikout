@@ -80,8 +80,6 @@
             "report every %d s": "Meldung alle %d s",
             "live status on": "Live-Status an",
             "live status off": "Live-Status aus",
-            "Hostname of the Faikout (as set in its web interface)": "Hostname des Faikout (wie in seiner Weboberfläche eingestellt)",
-            "The Faikout sends its data to the MQTT server of Symcon. In its web interface, enter the IP address of Symcon as MQTT server (port 1883 unless changed) and the user and password of the MQTT server instance.": "Der Faikout schickt seine Daten an den MQTT-Server von Symcon. In seiner Weboberfläche als MQTT-Server die IP-Adresse von Symcon eintragen (Port 1883, falls nicht geändert) sowie Benutzer und Passwort der MQTT-Server-Instanz.",
             "Select values": "Werte auswählen",
             "A value only appears once the Faikout reports it – not every air conditioner has every function. Unticked values are removed, unless they are archived: then they stay and keep being updated. To remove such a value, switch off its archiving first.": "Ein Wert erscheint erst, wenn der Faikout ihn meldet – nicht jedes Klimagerät hat jede Funktion. Werte ohne Haken werden entfernt, außer sie werden archiviert: Dann bleiben sie erhalten und werden weiter aktualisiert. Um so einen Wert zu entfernen, zuerst seine Archivierung ausschalten.",
             "Values": "Werte",
@@ -117,15 +115,17 @@
             "Restart of the Faikout requested.": "Neustart des Faikout angefordert.",
             "Settings sent to the Faikout.": "Einstellungen an den Faikout gesendet.",
             "Settings of the Faikout": "Einstellungen des Faikout",
-            "These settings are stored in the Faikout itself. \"Live status\" sends every change at once – recommended.": "Diese Einstellungen liegen im Faikout selbst. „Live-Status“ schickt jede Änderung sofort – empfohlen.",
-            "Report interval (seconds, 0 = off)": "Meldeintervall (Sekunden, 0 = aus)",
             "Live status": "Live-Status",
             "Messages for Home Assistant": "Meldungen für Home Assistant",
             "Send to the Faikout": "An den Faikout senden",
             "Send these settings to the Faikout?": "Diese Einstellungen an den Faikout senden?",
             "Restart the Faikout": "Faikout neu starten",
             "Restart the Faikout now? The air conditioner keeps running.": "Faikout jetzt neu starten? Das Klimagerät läuft weiter.",
-            "Energy meter outdoor unit": "Energiezähler Außengerät"
+            "Energy meter outdoor unit": "Energiezähler Außengerät",
+            "Hostname of the Faikout": "Hostname des Faikout",
+            "Enter the hostname exactly as shown in the web interface of the Faikout. The Faikout sends its data to the MQTT server of Symcon: in its web interface, enter the IP address of Symcon as MQTT server (port 1883 unless changed) and the user and password of the MQTT server instance.": "Den Hostnamen so eintragen, wie er in der Weboberfläche des Faikout steht. Der Faikout schickt seine Daten an den MQTT-Server von Symcon: In seiner Weboberfläche als MQTT-Server die IP-Adresse von Symcon eintragen (Port 1883, falls nicht geändert) sowie Benutzer und Passwort der MQTT-Server-Instanz.",
+            "Report interval (seconds)": "Meldeintervall (Sekunden)",
+            "These settings are stored in the Faikout itself. \"Live status\" sends every change at once – recommended. Report interval 0 = no regular report.": "Diese Einstellungen liegen im Faikout selbst. „Live-Status“ schickt jede Änderung sofort – empfohlen. Meldeintervall 0 = kein regelmäßiger Bericht."
         }
     }
 }

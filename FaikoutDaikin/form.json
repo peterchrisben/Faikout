@@ -8,12 +8,12 @@
         {
             "type": "ValidationTextBox",
             "name": "Hostname",
-            "caption": "Hostname of the Faikout (as set in its web interface)",
+            "caption": "Hostname of the Faikout",
             "width": "400px"
         },
         {
             "type": "Label",
-            "caption": "The Faikout sends its data to the MQTT server of Symcon. In its web interface, enter the IP address of Symcon as MQTT server (port 1883 unless changed) and the user and password of the MQTT server instance."
+            "caption": "Enter the hostname exactly as shown in the web interface of the Faikout. The Faikout sends its data to the MQTT server of Symcon: in its web interface, enter the IP address of Symcon as MQTT server (port 1883 unless changed) and the user and password of the MQTT server instance."
         },
         {
             "type": "CheckBox",
@@ -128,7 +128,7 @@
             "items": [
                 {
                     "type": "Label",
-                    "caption": "These settings are stored in the Faikout itself. \"Live status\" sends every change at once – recommended."
+                    "caption": "These settings are stored in the Faikout itself. \"Live status\" sends every change at once – recommended. Report interval 0 = no regular report."
                 },
                 {
                     "type": "RowLayout",
@@ -136,7 +136,7 @@
                         {
                             "type": "NumberSpinner",
                             "name": "DevReporting",
-                            "caption": "Report interval (seconds, 0 = off)",
+                            "caption": "Report interval (seconds)",
                             "minimum": 0,
                             "maximum": 3600,
                             "width": "260px",
